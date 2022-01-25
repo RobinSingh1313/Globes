@@ -2,22 +2,73 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:geolocator/geolocator.dart';
 
-import 'package:location/location.dart';
-
-class Body extends StatelessWidget {
+class Body extends StatefulWidget {
   const Body({Key? key}) : super(key: key);
 
   @override
+  _BodyState createState() => _BodyState();
+}
+
+class _BodyState extends State<Body> {
+  @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
-    final urlimagekinley = 'assets/kinley.png';
-    Position _currentPosition;
-    String _currentAddress;
-    final Geolocator geolocator = Geolocator()..forceAndroidLocationManager;
+    String dropdownvalue = 'Select any Floor';
+    var locationaddress = "";
+    String location = 'Null, Press Button';
+    String Address = 'search';
+    Future<Position> _getGeoLocationPosition() async {
+      bool serviceEnabled;
+      LocationPermission permission;
+      // Test if location services are enabled.
+      serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        // Location services are not enabled don't continue
+        // accessing the position and request users of the
+        // App to enable the location services.
+        await Geolocator.openLocationSettings();
+        return Future.error('Location services are disabled.');
+      }
+      permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          return Future.error('Location permissions are denied');
+        }
+      }
+      if (permission == LocationPermission.deniedForever) {
+        // Permissions are denied forever, handle appropriately.
+        return Future.error(
+            'Location permissions are permanently denied, we cannot request permissions.');
+      }
+      // When we reach here, permissions are granted and we can
+      // continue accessing the position of the device.
+      return await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
+    }
 
+    Future<void> GetAddressFromLatLong(Position position) async {
+      List<Placemark> placemarks =
+          await placemarkFromCoordinates(position.latitude, position.longitude);
+      print(placemarks);
+      Placemark place = placemarks[0];
+      Address =
+          '${place.street}, ${place.subLocality}, ${place.locality}, ${place.postalCode}, ${place.country}';
+    }
+
+    // List of items in our dropdown menu
+    var items = [
+      'Select any Floor',
+      'Ground Floor',
+      'First Fllor',
+      'Second Floor',
+      'Other ',
+    ];
+    final urlimagekinley = 'assets/kinley.png';
     return SingleChildScrollView(
       child: Column(
         children: [
@@ -74,6 +125,31 @@ class Body extends StatelessWidget {
                         children: [
                           Row(
                             children: [
+                              //dropdown
+                              DropdownButton(
+                                // Initial Value
+                                value: dropdownvalue,
+
+                                // Down Arrow Icon
+                                icon: const Icon(Icons.keyboard_arrow_down),
+
+                                // Array list of items
+                                items: items.map((String items) {
+                                  return DropdownMenuItem(
+                                    value: items,
+                                    child: Text(items),
+                                  );
+                                }).toList(),
+                                // After selecting the desired option,it will
+                                // change button value to selected value
+                                onChanged: (String? newValue) {
+                                  setState(() {
+                                    dropdownvalue = newValue!;
+                                  });
+                                },
+                              ),
+
+                              //incdec
                               Expanded(child: Container()),
                               Container(
                                   width: 40,
@@ -128,7 +204,13 @@ class Body extends StatelessWidget {
                             height: 10,
                           ),
                           ElevatedButton(
-                              onPressed: () => null,
+                              onPressed: () async {
+                                Position position =
+                                    await _getGeoLocationPosition();
+                                location =
+                                    'Lat: ${position.latitude} , Long: ${position.longitude}';
+                                GetAddressFromLatLong(position);
+                              },
                               child: const Text(
                                 "Buy Now",
                                 style: TextStyle(
@@ -156,6 +238,7 @@ class Body extends StatelessWidget {
     );
   }
 }
+
 /*
   fetchLocation() async {}
   Future<List<Address>> getAddress(double lat, double lang) async {}
