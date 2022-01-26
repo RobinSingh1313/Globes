@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:hexcolor/hexcolor.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
 
 class Body extends StatefulWidget {
   const Body({Key? key}) : super(key: key);
@@ -14,6 +15,29 @@ class Body extends StatefulWidget {
 }
 
 class _BodyState extends State<Body> {
+  var _razorpay = Razorpay();
+  @override
+  void initState() {
+    // TODO: implement initState
+    _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);
+    _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handlePaymentError);
+    _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleExternalWallet);
+
+    super.initState();
+  }
+
+  void _handlePaymentSuccess(PaymentSuccessResponse response) {
+    // Do something when payment succeeds
+  }
+
+  void _handlePaymentError(PaymentFailureResponse response) {
+    // Do something when payment fails
+  }
+
+  void _handleExternalWallet(ExternalWalletResponse response) {
+    // Do something when an external wallet was selected
+  }
+
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
@@ -21,6 +45,15 @@ class _BodyState extends State<Body> {
     var locationaddress = "";
     String location = 'Null, Press Button';
     String Address = 'search';
+
+//payment ateway
+    var options = {
+      'key': 'rzp_test_CQvve50jQO7JHM',
+      'amount': 100,
+      'name': 'Acme Corp.',
+      'description': 'Fine T-Shirt',
+      'prefill': {'contact': '8888888888', 'email': 'test@razorpay.com'}
+    };
     Future<Position> _getGeoLocationPosition() async {
       bool serviceEnabled;
       LocationPermission permission;
@@ -115,7 +148,7 @@ class _BodyState extends State<Body> {
                           Padding(
                             padding: EdgeInsets.all(20),
                             child: Text(
-                              "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+                              "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. ages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
                               style: TextStyle(height: 1.5),
                             ),
                           )
@@ -126,6 +159,9 @@ class _BodyState extends State<Body> {
                           Row(
                             children: [
                               //dropdown
+                              SizedBox(
+                                width: 10,
+                              ),
                               DropdownButton(
                                 // Initial Value
                                 value: dropdownvalue,
@@ -189,13 +225,40 @@ class _BodyState extends State<Body> {
                           ),
                           Center(
                             child: Text(
-                              "Sanareddy 502001,Netaji Nagar",
+                              "  Sanareddy 502001,Netaji Nagar",
                               style: TextStyle(
                                   color: Color(0xFF42A5F5),
                                   fontSize: 15,
                                   fontFamily: 'Montserrat'),
                             ),
-                          )
+                          ),
+                        ],
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text("Delivery Location"),
+                          const SizedBox(
+                            width: 10,
+                          ),
+                          Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(25),
+                                  color: HexColor("#14446D")),
+                              child: IconButton(
+                                  icon: const Icon(
+                                    Icons.location_searching_sharp,
+                                    color: Colors.white,
+                                  ),
+                                  onPressed: () async {
+                                    Position position =
+                                        await _getGeoLocationPosition();
+                                    location =
+                                        'Lat: ${position.latitude} , Long: ${position.longitude}';
+                                    GetAddressFromLatLong(position);
+                                  })),
                         ],
                       ),
                       Column(
@@ -205,11 +268,18 @@ class _BodyState extends State<Body> {
                           ),
                           ElevatedButton(
                               onPressed: () async {
-                                Position position =
-                                    await _getGeoLocationPosition();
-                                location =
-                                    'Lat: ${position.latitude} , Long: ${position.longitude}';
-                                GetAddressFromLatLong(position);
+                                showModalBottomSheet(
+                                    context: context,
+                                    builder: (context) {
+                                      return Column(
+                                        children: [
+                                          ElevatedButton(
+                                              onPressed: () =>
+                                                  _razorpay.open(options),
+                                              child: Text("Pay Now"))
+                                        ],
+                                      );
+                                    });
                               },
                               child: const Text(
                                 "Buy Now",
@@ -217,7 +287,7 @@ class _BodyState extends State<Body> {
                                     fontSize: 25, fontFamily: 'Montserrat'),
                               ))
                         ],
-                      )
+                      ),
                     ],
                   ),
                 ),
@@ -236,6 +306,13 @@ class _BodyState extends State<Body> {
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    _razorpay.clear();
+    super.dispose();
   }
 }
 

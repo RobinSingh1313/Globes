@@ -35,7 +35,9 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.2
   geolocator: ^8.0.5
+  fluttertoast: ^8.0.8
   geocoding: ^2.0.2
+  razorpay_flutter: ^1.2.9
 
   hexcolor: ^2.0.6
   flutter_svg: ^0.18.0

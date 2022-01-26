@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
 
 class home extends StatefulWidget {
   const home({Key? key}) : super(key: key);
@@ -27,9 +28,12 @@ class home extends StatefulWidget {
             )*/
 
 class _homeState extends State<home> {
+ 
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
+    Razorpay razorpay;
+
     var items = [
       'Item 1',
       'Item 2',
@@ -42,6 +46,7 @@ class _homeState extends State<home> {
     final urlimagebg = 'assets/bg.png';
     final urlimagekinley = 'assets/kinley.png';
     final starss = 'assets/stars.png';
+
 
     return Scaffold(
       body: Stack(
@@ -112,4 +117,5 @@ class _homeState extends State<home> {
       ),
     );
   }
+
 }
