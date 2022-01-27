@@ -1,5 +1,5 @@
 import 'dart:ui';
-
+import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:geocoding/geocoding.dart';
@@ -16,6 +16,14 @@ class Body extends StatefulWidget {
 
 class _BodyState extends State<Body> {
   var _razorpay = Razorpay();
+  var _selected = "";
+  var options = {
+    'key': 'rzp_test_CQvve50jQO7JHM',
+    'amount': 100,
+    'name': 'Acme Corp.',
+    'description': 'Fine T-Shirt',
+    'prefill': {'contact': '8888888888', 'email': 'test@razorpay.com'}
+  };
   @override
   void initState() {
     // TODO: implement initState
@@ -45,15 +53,10 @@ class _BodyState extends State<Body> {
     var locationaddress = "";
     String location = 'Null, Press Button';
     String Address = 'search';
+    DateTime selectedDate = DateTime.now();
 
 //payment ateway
-    var options = {
-      'key': 'rzp_test_CQvve50jQO7JHM',
-      'amount': 100,
-      'name': 'Acme Corp.',
-      'description': 'Fine T-Shirt',
-      'prefill': {'contact': '8888888888', 'email': 'test@razorpay.com'}
-    };
+
     Future<Position> _getGeoLocationPosition() async {
       bool serviceEnabled;
       LocationPermission permission;
@@ -268,18 +271,7 @@ class _BodyState extends State<Body> {
                           ),
                           ElevatedButton(
                               onPressed: () async {
-                                showModalBottomSheet(
-                                    context: context,
-                                    builder: (context) {
-                                      return Column(
-                                        children: [
-                                          ElevatedButton(
-                                              onPressed: () =>
-                                                  _razorpay.open(options),
-                                              child: Text("Pay Now"))
-                                        ],
-                                      );
-                                    });
+                                _displayDialog(context);
                               },
                               child: const Text(
                                 "Buy Now",
@@ -313,6 +305,51 @@ class _BodyState extends State<Body> {
     // TODO: implement dispose
     _razorpay.clear();
     super.dispose();
+  }
+
+  void _onSelectionChanged(
+      DateRangePickerSelectionChangedArgs
+          dateRangePickerSelectionChangedArgs) {}
+
+  _displayDialog(BuildContext context) async {
+    _selected = await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Expanded(
+          child: SimpleDialog(
+            title: Text('Select Days'),
+            children: [
+              SimpleDialogOption(
+                  child: Container(
+                width: 250,
+                child: SfDateRangePicker(
+                  view: DateRangePickerView.month,
+                  selectionMode: DateRangePickerSelectionMode.multiple,
+                  selectionColor: HexColor('#14446D'),
+                ),
+              )),
+              SimpleDialogOption(
+                child: ElevatedButton(
+                    onPressed: () => null, child: Text("Select Days")),
+              ),
+              SimpleDialogOption(
+                child: ElevatedButton(
+                    onPressed: () => _razorpay.open(options),
+                    child: Text("Pay Now")),
+              )
+            ],
+            elevation: 10,
+            //backgroundColor: Colors.green,
+          ),
+        );
+      },
+    );
+
+    if (_selected != null) {
+      setState(() {
+        _selected = _selected;
+      });
+    }
   }
 }
 
