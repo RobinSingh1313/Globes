@@ -18,12 +18,24 @@ class Body extends StatefulWidget {
 
 class _BodyState extends State<Body> {
   var _razorpay = Razorpay();
+  String Address = 'Click Location';
+
+  String dropdownvalue = 'Select Any Floor';
+
+  var items = [
+    'Select Any Floor',
+    'Ground Floor',
+    'First Floor',
+    'Second Floor',
+    'Other'
+  ];
+
+  var _counter = 1;
   var whichfloor;
-  var mobilenumber="9014473447";
+  var mobilenumber = "9014473447";
   late DatabaseReference _databaseReference, _anotherdatabaseReference;
   var currentday;
-   double latitudes=0.0,longitudes=0.0;
-  
+  double latitudes = 0.0, longitudes = 0.0;
 
   var currentmonth;
   var k;
@@ -31,6 +43,20 @@ class _BodyState extends State<Body> {
   List<String> result = [];
   List<String> datess = [];
   var _selected = "";
+  void increment() {
+    setState(() {
+      _counter++;
+    });
+  }
+
+  void decremenent() {
+    setState(() {
+      if (_counter > 1) {
+        _counter--;
+      }
+    });
+  }
+
   var options = {
     'key': 'rzp_test_CQvve50jQO7JHM',
     'amount': 100,
@@ -55,6 +81,7 @@ class _BodyState extends State<Body> {
 
   void _handlePaymentSuccess(PaymentSuccessResponse response) {
     // Do something when payment succeeds
+    BookOrder("Online");
   }
 
   void _handlePaymentError(PaymentFailureResponse response) {
@@ -68,10 +95,11 @@ class _BodyState extends State<Body> {
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
-    String dropdownvalue = 'Select any Floor';
     var locationaddress = "";
+    String Addr = "";
+    String _chosenValue = "Select a Floor";
+
     String location = 'Null, Press Button';
-    String Address = 'search';
     DateTime selectedDate = DateTime.now();
 
     currentday = selectedDate.day;
@@ -117,22 +145,13 @@ class _BodyState extends State<Body> {
     Future<void> GetAddressFromLatLong(Position position) async {
       List<Placemark> placemarks =
           await placemarkFromCoordinates(position.latitude, position.longitude);
-          latitudes=position.latitude;
-          longitudes=position.longitude;
       print(placemarks);
       Placemark place = placemarks[0];
       Address =
-          '${place.street}, ${place.subLocality}, ${place.locality}, ${place.postalCode}, ${place.country}';
+          '${place.street}, ${place.subLocality}, ${place.locality}, ${place.postalCode}';
+      setState(() {});
     }
 
-    // List of items in our dropdown menu
-    var items = [
-      'Select any Floor',
-      'Ground Floor',
-      'First Fllor',
-      'Second Floor',
-      'Other ',
-    ];
     final urlimagekinley = 'assets/kinley.png';
     return SingleChildScrollView(
       child: Column(
@@ -191,30 +210,18 @@ class _BodyState extends State<Body> {
                           Row(
                             children: [
                               //dropdown
-                              SizedBox(
+                              const SizedBox(
                                 width: 10,
                               ),
                               DropdownButton(
-                                // Initial Value
                                 value: dropdownvalue,
-
-                                // Down Arrow Icon
-                                icon: const Icon(Icons.keyboard_arrow_down),
-
-                                // Array list of items
+                                icon: Icon(Icons.keyboard_arrow_down),
                                 items: items.map((String items) {
                                   return DropdownMenuItem(
-                                    value: items,
-                                    
-
-                                    child: Text(items),
-                                  );
+                                      value: items, child: Text(items));
                                 }).toList(),
-                                // After selecting the desired option,it will
-                                // change button value to selected value
                                 onChanged: (String? newValue) {
                                   setState(() {
-                                    whichfloor=newValue;
                                     dropdownvalue = newValue!;
                                   });
                                 },
@@ -233,10 +240,19 @@ class _BodyState extends State<Body> {
                                         Icons.add,
                                         color: Colors.white,
                                       ),
-                                      onPressed: () => null)),
+                                      onPressed: () => increment())),
                               const SizedBox(
-                                width: 30,
+                                width: 10,
                               ),
+
+                              Text(
+                                _counter.toString(),
+                                style: TextStyle(fontSize: 22),
+                              ),
+                              const SizedBox(
+                                width: 10,
+                              ),
+
                               Container(
                                   width: 40,
                                   height: 40,
@@ -248,23 +264,25 @@ class _BodyState extends State<Body> {
                                         Icons.remove,
                                         color: Colors.white,
                                       ),
-                                      onPressed: () => null))
+                                      onPressed: () => decremenent())),
+                              SizedBox(
+                                width: 10,
+                              )
                             ],
                           )
                         ],
                       ),
                       Column(
-                        children: const [
-                          SizedBox(
+                        children: [
+                          const SizedBox(
                             height: 10,
                           ),
                           Center(
                             child: Text(
-                              "  Sanareddy 502001,Netaji Nagar",
+                              '${Address}',
                               style: TextStyle(
-                                  color: Color(0xFF42A5F5),
-                                  fontSize: 15,
-                                  fontFamily: 'Montserrat'),
+                                  color: HexColor("#14446D"),
+                                  fontWeight: FontWeight.bold),
                             ),
                           ),
                         ],
@@ -454,18 +472,37 @@ class _BodyState extends State<Body> {
   }
 
   void BookOrder(String paymentType) {
-    Map<String, String> contact = {
-      'Delivery':'false',
-      'days' : 'dates',//add
-      'floor':whichfloor,
-      'latitude':latitudes.toString(),
-      'longitude':longitudes.toString(),
-      'paymentmode':paymentType,
-      'quantitys':
-      'total':
-      'uid':mobilenumber
+    for (int i = 0; i < datess.length; i++) {
+      Map<String, String> booking = {
+        'Delivery': 'false',
+        'days': datess[i].toString(), //add
+        'floor': whichfloor,
+        'latitude': latitudes.toString(),
+        'longitude': longitudes.toString(),
+        'paymentmode': paymentType,
+        'quantitys': _counter.toString(),
+        'total': '15',
+        'uid': mobilenumber
+      };
+      Fluttertoast.showToast(
+          msg: "Method Work:",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.CENTER,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16.0);
+      Fluttertoast.showToast(
+          msg: _databaseReference.toString(),
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.CENTER,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16.0);
 
-    };
+      _databaseReference.child(datess[i]).child(mobilenumber).set(booking);
+    }
   }
 }
 
